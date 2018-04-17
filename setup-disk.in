@@ -304,11 +304,25 @@ setup_grub() {
 	cat > "$mnt"/boot/grub/grub.cfg <<- EOF
 	set timeout=2
 	insmod all_video
-	menuentry "Alpine Linux" {
-	    linux   /boot/$kernel modules=$modules root=$root $kernel_opts
-	    initrd  /boot/initramfs-$KERNEL_FLAVOR
-	}
 	EOF
+
+	if [ "$(rc --sys)" = "XEN0" ]; then
+		# TODO: Xen parameters?
+		cat >> "$mnt"/boot/grub/grub.cfg <<- EOF
+		menuentry "Xen/Linux $KERNEL_FLAVOR" {
+		    multiboot2 /boot/xen.gz
+		    module2    /boot/$kernel modules=$modules root=$root $kernel_opts
+		    module2    /boot/initramfs-$KERNEL_FLAVOR
+		}
+		EOF
+	else
+		cat >> "$mnt"/boot/grub/grub.cfg <<- EOF
+		menuentry "Alpine Linux" {
+		    linux   /boot/$kernel modules=$modules root=$root $kernel_opts
+		    initrd  /boot/initramfs-$KERNEL_FLAVOR
+		}
+		EOF
+	fi
 }
 
 # setup syslinux bootloader
